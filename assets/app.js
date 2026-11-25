@@ -7,16 +7,16 @@
   const ROLE_ORDER = ["Lead", "Supporting", "Cameo / small role", "Voice role", "Narrator", "Crew", "Himself"];
   // Colour-blind-checked palette (validated against the dark surface).
   const ROLE_COLORS = {
-    "Lead": "#C98E2A", "Supporting": "#1FA0B5", "Cameo / small role": "#D96A5B",
-    "Voice role": "#9583E6", "Narrator": "#5FA84A", "Himself": "#5B87E0", "Crew": "#C766A3",
+    "Lead": "#5B8DEF", "Supporting": "#D97E52", "Cameo / small role": "#2BA89C",
+    "Voice role": "#A27BE6", "Narrator": "#6FA34A", "Crew": "#B0892A", "Himself": "#D9668F",
   };
-  const MEDIA_COLORS = { movie: "#C98E2A", tv: "#1FA0B5" };
+  const MEDIA_COLORS = { movie: "#5B8DEF", tv: "#D97E52" };
   const MEDIA_LABEL = { movie: "Film", tv: "TV" };
   const IMG = "https://image.tmdb.org/t/p/";
   const PAGE = 40;
   const MIN_VOTES_AVG = 20;     // titles need this many votes to count in the average rating
   const MIN_VOTES_TOP = 100;    // ...and this many to make the "highest rated" top 10
-  const T = { text: "#f1ebe2", text2: "#bdb3a6", text3: "#8f8577", grid: "#2a241f", axis: "#463d33", surface: "#15120f" };
+  const T = { text: "#eef1f7", text2: "#aeb4c2", text3: "#7d8496", grid: "rgba(255,255,255,.06)", axis: "rgba(255,255,255,.14)", surface: "#11131b" };
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ------------------------------------------------------------------ state
@@ -375,9 +375,9 @@
   // ------------------------------------------------------------------ charts
   const baseText = { color: T.text2, fontFamily: "Inter, system-ui, sans-serif", fontSize: 12 };
   const tooltipBase = {
-    backgroundColor: "rgba(21,18,15,.96)", borderColor: "#463d33", borderWidth: 1, padding: [8, 12],
+    backgroundColor: "rgba(17,19,27,.92)", borderColor: "rgba(255,255,255,.14)", borderWidth: 1, padding: [8, 12],
     textStyle: { color: T.text, fontFamily: "Inter, system-ui, sans-serif", fontSize: 13 },
-    extraCssText: "border-radius:10px;box-shadow:0 10px 30px -10px #000;",
+    extraCssText: "border-radius:12px;box-shadow:0 16px 40px -12px #000;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);",
   };
   const axisCommon = {
     axisLine: { lineStyle: { color: T.axis } }, axisTick: { show: false },
@@ -422,7 +422,7 @@
         ...anim, textStyle: baseText,
         legend: { top: 0, right: 0, textStyle: { color: T.text2 }, itemWidth: 12, itemHeight: 12, icon: "roundRect" },
         grid: { left: 34, right: 8, top: 34, bottom: 28 },
-        tooltip: { ...tooltipBase, trigger: "axis", axisPointer: { type: "shadow", shadowStyle: { color: "rgba(230,184,102,.06)" } } },
+        tooltip: { ...tooltipBase, trigger: "axis", axisPointer: { type: "shadow", shadowStyle: { color: "rgba(157,184,255,.07)" } } },
         xAxis: { type: "category", data: cats, ...axisCommon, splitLine: { show: false } },
         yAxis: { type: "value", minInterval: 1, ...axisCommon },
         series,
@@ -442,7 +442,7 @@
         tooltip: { ...tooltipBase, trigger: "item", formatter: (p) => `<b>${esc(p.name)}</b><br>${p.value} title${p.value === 1 ? "" : "s"}` },
         xAxis: { type: "value", show: false },
         yAxis: { type: "category", data: gEntries.map((e) => e[0]), ...axisCommon, axisLine: { show: false }, axisLabel: { color: T.text2, fontSize: 12 } },
-        series: [{ type: "bar", data: gEntries.map((e) => e[1]), barMaxWidth: 16, itemStyle: { color: "#C98E2A", borderRadius: [0, 4, 4, 0] },
+        series: [{ type: "bar", data: gEntries.map((e) => e[1]), barMaxWidth: 16, itemStyle: { color: "#5B8DEF", borderRadius: [0, 4, 4, 0] },
           label: { show: true, position: "right", color: T.text2, fontSize: 11 } }],
       }, true);
       const top = gEntries[gEntries.length - 1];
@@ -537,12 +537,12 @@
       chart("c-screen").setOption({
         ...anim, textStyle: baseText,
         grid: { left: 44, right: 8, top: 16, bottom: 28 },
-        tooltip: { ...tooltipBase, trigger: "axis", axisPointer: { type: "shadow", shadowStyle: { color: "rgba(230,184,102,.06)" } },
+        tooltip: { ...tooltipBase, trigger: "axis", axisPointer: { type: "shadow", shadowStyle: { color: "rgba(157,184,255,.07)" } },
           formatter: (ps) => { const y = ps[0].name; const list = st.filter((r) => String(r.year) === y);
             return `<b>${y}</b>: ${fmtMinutes(ps[0].value)}<br>` + list.map((r) => `<span style="color:${T.text3}">${esc(r.title)}: ${fmtMinutes(r.minutes)}</span>`).join("<br>"); } },
         xAxis: { type: "category", data: cats, ...axisCommon, splitLine: { show: false } },
         yAxis: { type: "value", ...axisCommon, axisLabel: { color: T.text3, fontSize: 11, formatter: (v) => v + "m" } },
-        series: [{ type: "bar", data: sum, barMaxWidth: 18, itemStyle: { color: "#C98E2A", borderRadius: [4, 4, 0, 0] } }],
+        series: [{ type: "bar", data: sum, barMaxWidth: 18, itemStyle: { color: "#5B8DEF", borderRadius: [4, 4, 0, 0] } }],
       }, true);
       describe("c-screen", `Bar chart of recorded screen time per year; ${st.length} of ${acting.length} titles recorded.`);
     }
@@ -709,6 +709,12 @@
     $("#last-updated").textContent = meta.last_updated ? fmtDate(meta.last_updated) : "—";
     if (meta.last_updated) $("#last-updated").setAttribute("datetime", meta.last_updated);
     renderNews(news);
+    const prof = credits.person && credits.person.profile_path;
+    if (prof) {
+      const img = new Image();
+      img.onload = () => { const el = $("#portrait"); el.style.backgroundImage = `url("${img.src}")`; el.classList.add("loaded"); };
+      img.src = IMG + "h632" + prof;
+    }
 
     ALL = prepare(credits.credits || [], parseCSV(screenCSV), parseCSV(overCSV));
     const years = ALL.map((r) => r.year).filter(Boolean);
