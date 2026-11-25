@@ -635,7 +635,10 @@
       <div><h4>${esc(r.title)} <span class="muted" style="font-size:18px">${yearLabel(r)}</span></h4>
       <p class="overview">${esc(r.overview || "No overview available.")}</p>
       <dl class="facts">${facts}</dl>
-      <a href="${url}" target="_blank" rel="noopener">View on TMDB ↗</a></div></div></td></tr>`;
+      <div class="detail-actions">
+        ${r.trailer ? `<button type="button" class="btn play" data-trailer="${esc(r.trailer)}" data-title="${esc(r.title)}"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Play trailer</button>` : ""}
+        <a class="btn btn-ghost" href="${url}" target="_blank" rel="noopener">View on TMDB ↗</a>
+      </div></div></div></td></tr>`;
   }
 
   function toggleRow(uid) {
@@ -684,6 +687,7 @@
       const first = shown; shown += PAGE; renderTable();
       const next = document.querySelectorAll("#credits-body tr.row")[first]; if (next) next.focus();
     });
+    body.addEventListener("click", (e) => { const b = e.target.closest("button[data-trailer]"); if (b) openTrailer(b.dataset.trailer, b.dataset.title, b); });
     $("#tops").addEventListener("click", (e) => { const b = e.target.closest("button[data-uid]"); if (b) openDetail(b.dataset.uid); });
   }
 
@@ -693,6 +697,32 @@
     $("#news").innerHTML = items.length ? items.map((n) => `<li><a href="${esc(n.link)}" target="_blank" rel="noopener">
         <span class="h">${esc(n.title)}</span><span class="m"><b>${esc(n.source || "News")}</b> · <time datetime="${esc(n.date)}">${ago(n.date)}</time></span></a></li>`).join("")
       : `<li class="muted">No recent headlines.</li>`;
+  }
+
+  // ------------------------------------------------------------------ trailer player
+  let trailerOpener = null;
+  function openTrailer(key, title, opener) {
+    const dlg = $("#trailer");
+    trailerOpener = opener;
+    $("#trailer-title").textContent = title + " — trailer";
+    $("#trailer-frame").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(key)}?autoplay=1&rel=0&modestbranding=1"
+      title="${esc(title)} trailer" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    $("#trailer-yt").href = "https://www.youtube.com/watch?v=" + encodeURIComponent(key);
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+    document.body.classList.add("modal-open");
+  }
+  function closeTrailer() {
+    const dlg = $("#trailer");
+    $("#trailer-frame").innerHTML = "";          // stops the video
+    if (dlg.open) dlg.close();
+    document.body.classList.remove("modal-open");
+    if (trailerOpener) trailerOpener.focus();
+  }
+  function bindTrailer() {
+    const dlg = $("#trailer");
+    $("#trailer-close").addEventListener("click", closeTrailer);
+    dlg.addEventListener("close", () => { if ($("#trailer-frame").innerHTML) closeTrailer(); });
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) closeTrailer(); });  // click outside the player
   }
 
   function toast(msg) {
@@ -725,7 +755,7 @@
     state.y0 = Math.max(BOUNDS.y0, Math.min(state.y0, BOUNDS.y1)); state.y1 = Math.min(BOUNDS.y1, Math.max(state.y1, state.y0));
     state.b1 = Math.min(state.b1, BOUNDS.b1);
 
-    buildFilters(); bindTable(); update();
+    buildFilters(); bindTable(); bindTrailer(); update();
 
     let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => Object.values(charts).forEach((c) => c.resize()), 120); });
   }

@@ -136,6 +136,22 @@ def confirm_person_id(tmdb):
 # --------------------------------------------------------------------------
 # Title details (cached)
 # --------------------------------------------------------------------------
+def pick_trailer(d):
+    """Best YouTube trailer key: official English trailers first, then teasers/clips."""
+    vids = [v for v in ((d.get("videos") or {}).get("results") or [])
+            if v.get("site") == "YouTube" and v.get("key")]
+    if not vids:
+        return None
+    type_rank = {"Trailer": 0, "Teaser": 1, "Clip": 2, "Featurette": 3}
+    vids.sort(key=lambda v: (type_rank.get(v.get("type"), 9),
+                             not v.get("official"),
+                             v.get("iso_639_1") != "en",
+                             -(v.get("size") or 0),
+                             v.get("published_at") or ""))
+    best = vids[0]
+    return best["key"] if type_rank.get(best.get("type"), 9) <= 3 else None
+
+
 def slim_movie(d):
     crew = (d.get("credits") or {}).get("crew", [])
     return {
@@ -152,6 +168,7 @@ def slim_movie(d):
         "poster_path": d.get("poster_path"),
         "overview": d.get("overview") or "",
         "imdb_id": d.get("imdb_id"),
+        "trailer": pick_trailer(d),
     }
 
 
@@ -169,6 +186,7 @@ def slim_tv(d):
         "vote_count": d.get("vote_count") or 0,
         "creators": [c["name"] for c in d.get("created_by", [])],
         "poster_path": d.get("poster_path"),
+        "trailer": pick_trailer(d),
         "overview": d.get("overview") or "",
     }
 
@@ -210,7 +228,8 @@ def fetch_details(tmdb, cache, titles, tv_credit_ids, full_refresh):
     for media, tid in sorted(titles):
         key = f"{media}:{tid}"
         cached = cache.get(key)
-        stale = cached is None or full_refresh
+        # "trailer" was added later: refetch older cache entries once to fill it in.
+        stale = cached is None or full_refresh or "trailer" not in cached
         # Upcoming films change often (dates, budgets) - re-check them nightly.
         if cached and media == "movie" and is_upcoming_movie(cached):
             stale = True
@@ -220,11 +239,13 @@ def fetch_details(tmdb, cache, titles, tv_credit_ids, full_refresh):
         if not stale:
             continue
         if media == "movie":
-            d = tmdb.get(f"/movie/{tid}", append_to_response="credits")
+            d = tmdb.get(f"/movie/{tid}", append_to_response="credits,videos",
+                         include_video_language="en,null")
             if d:
                 cache[key] = slim_movie(d)
         else:
-            d = tmdb.get(f"/tv/{tid}")
+            d = tmdb.get(f"/tv/{tid}", append_to_response="videos",
+                         include_video_language="en,null")
             if d:
                 cache[key] = slim_tv(d)
         fetched += 1
@@ -345,6 +366,7 @@ def build_credits(raw, cache):
             "poster": det.get("poster_path") or fb.get("poster_path"),
             "overview": det.get("overview") or fb.get("overview") or "",
             "runtime": det.get("runtime"),
+            "trailer": det.get("trailer"),
         }
         if media == "movie":
             date = det.get("release_date") or fb.get("release_date") or None
