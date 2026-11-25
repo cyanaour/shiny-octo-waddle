@@ -16,8 +16,9 @@ Every night at about 03:17 UTC, GitHub runs the workflow **"Update data and publ
 2. Downloads details (budget, box office, director, poster and so on) only for **new** titles. Every Sunday it re-downloads everything in case TMDB corrected something. Unreleased films are re-checked every night.
 3. Sorts each credit into a role type: Lead, Supporting, Cameo / small role, Voice role, Narrator, Himself or Crew.
 4. Adds any new titles to `data/screentime.csv`, with the minutes left blank.
-5. Fetches the latest 20 Liam Neeson headlines from Google News. It drops duplicates and anything older than 60 days.
-6. Saves the results in the `data/` folder and **commits only if something changed**. Then it republishes the website.
+5. Checks where each title can legally be streamed, rented or bought **in Ireland** (TMDB's "watch providers" data, from JustWatch) and saves it to `data/watch.json`. Each title's details show this under "Where to watch". It also picks the best official YouTube trailer for the "Play trailer" button.
+6. Fetches the latest 20 Liam Neeson headlines from Google News. It drops duplicates and anything older than 60 days.
+7. Saves the results in the `data/` folder and **commits only if something changed**. Then it republishes the website.
 
 Your TMDB key is stored as a GitHub Secret called `TMDB_TOKEN`. It is never part of the website.
 

@@ -20,6 +20,7 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ------------------------------------------------------------------ state
+  let WATCH = {};           // where to watch in Ireland, keyed "movie:123"
   let ALL = [];             // every credit row (after overrides + screen time)
   let BOUNDS = {};          // min/max for sliders
   let VIEW = [];            // rows passing the filters
@@ -635,10 +636,26 @@
       <div><h4>${esc(r.title)} <span class="muted" style="font-size:18px">${yearLabel(r)}</span></h4>
       <p class="overview">${esc(r.overview || "No overview available.")}</p>
       <dl class="facts">${facts}</dl>
+      ${watchHTML(r)}
       <div class="detail-actions">
         ${r.trailer ? `<button type="button" class="btn play" data-trailer="${esc(r.trailer)}" data-title="${esc(r.title)}"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Play trailer</button>` : ""}
         <a class="btn btn-ghost" href="${url}" target="_blank" rel="noopener">View on TMDB ↗</a>
       </div></div></div></td></tr>`;
+  }
+
+  function watchHTML(r) {
+    if (r.role_type === "Himself") return "";
+    const w = WATCH[r.key];
+    const groups = w ? [["stream", "Stream"], ["free", "Free"], ["ads", "Free with ads"], ["rent", "Rent"], ["buy", "Buy"]].filter(([k]) => w[k]) : [];
+    const body = groups.length
+      ? groups.map(([k, label]) => `<div class="watch-row"><span class="watch-label">${label}</span><div class="watch-logos">${w[k].map((p) =>
+          `<a class="provider" href="${esc(w.link)}" target="_blank" rel="noopener" title="${esc(label)} on ${esc(p.name)}">${p.logo
+            ? `<img src="${IMG}w92${esc(p.logo)}" alt="${esc(p.name)}" width="36" height="36" loading="lazy">` : ""}<span>${esc(p.name)}</span></a>`).join("")}</div></div>`).join("")
+      : `<p class="watch-none">${r.upcoming ? "Not released yet." : "Not currently available to stream, rent or buy in Ireland."}</p>`;
+    return `<section class="watch" aria-label="Where to watch in Ireland">
+      <h5>Where to watch <span>in Ireland</span></h5>${body}
+      <p class="watch-credit">Availability by <a href="https://www.justwatch.com/ie" target="_blank" rel="noopener">JustWatch</a>, updated nightly</p>
+    </section>`;
   }
 
   function toggleRow(uid) {
@@ -732,10 +749,11 @@
 
   // ------------------------------------------------------------------ boot
   async function boot() {
-    const [credits, meta, news, screenCSV, overCSV] = await Promise.all([
+    const [credits, meta, news, screenCSV, overCSV, watch] = await Promise.all([
       getJSON("data/credits.json", { credits: [] }), getJSON("data/meta.json", {}), getJSON("data/news.json", { items: [] }),
-      getText("data/screentime.csv"), getText("data/overrides.csv"),
+      getText("data/screentime.csv"), getText("data/overrides.csv"), getJSON("data/watch.json", { titles: {} }),
     ]);
+    WATCH = watch.titles || {};
     $("#last-updated").textContent = meta.last_updated ? fmtDate(meta.last_updated) : "—";
     if (meta.last_updated) $("#last-updated").setAttribute("datetime", meta.last_updated);
     renderNews(news);

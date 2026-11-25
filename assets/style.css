@@ -22,6 +22,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
   margin: 0;
@@ -318,6 +319,23 @@ table.credits { width: 100%; border-collapse: collapse; table-layout: auto; }
 .facts dt { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
 .facts dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
 .more { display: block; margin: 14px auto 0; }
+.watch { margin: 4px 0 16px; padding: 14px 14px 10px; border-radius: 14px; background: rgba(0, 0, 0, .22); border: 1px solid var(--edge); }
+.watch h5 { margin: 0 0 10px; font: 600 14px var(--font-display); letter-spacing: -.01em; }
+.watch h5 span { color: var(--text-3); font-weight: 500; }
+.watch-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: center; margin-bottom: 8px; }
+@media (max-width: 480px) { .watch-row { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+.watch-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.watch-logos { display: flex; flex-wrap: wrap; gap: 6px; }
+.provider {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 12px;
+  background: rgba(255, 255, 255, .05); border: 1px solid var(--edge); color: var(--text); font-size: 13px; text-decoration: none;
+  transition: background .2s, border-color .2s;
+}
+.provider:hover { background: rgba(255, 255, 255, .1); border-color: var(--edge-strong); color: #fff; }
+.provider img { width: 28px; height: 28px; border-radius: 8px; display: block; }
+.watch-none { margin: 0 0 6px; font-size: 14px; color: var(--text-2); }
+.watch-credit { margin: 6px 0 0; font-size: 11px; color: var(--text-3); }
+.watch-credit a { color: var(--text-2); }
 .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .detail-actions .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
 .btn.play { background: linear-gradient(135deg, rgba(91, 141, 239, .45), rgba(91, 141, 239, .2)); border-color: rgba(157, 184, 255, .55); box-shadow: 0 8px 24px -10px rgba(91, 141, 239, .7); }

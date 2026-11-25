@@ -40,6 +40,8 @@ DATA = os.path.join(ROOT, "data")
 CACHE_FILE = os.path.join(DATA, "cache", "tmdb_details.json")
 CREDITS_FILE = os.path.join(DATA, "credits.json")
 NEWS_FILE = os.path.join(DATA, "news.json")
+WATCH_FILE = os.path.join(DATA, "watch.json")
+WATCH_COUNTRY = "IE"  # where-to-watch availability is shown for Ireland
 META_FILE = os.path.join(DATA, "meta.json")
 SCREENTIME_FILE = os.path.join(DATA, "screentime.csv")
 OVERRIDES_FILE = os.path.join(DATA, "overrides.csv")
@@ -489,6 +491,28 @@ def fetch_news():
     return items
 
 
+# --------------------------------------------------------------------------
+# Where to watch (TMDB watch providers, data from JustWatch)
+# --------------------------------------------------------------------------
+def update_watch(tmdb, credits):
+    """Legal streaming / rent / buy options in Ireland, re-checked every night."""
+    out = {}
+    keys = sorted({(c["media"], c["id"]) for c in credits if c["role_type"] != "Himself" and not c["upcoming"]})
+    for media, tid in keys:
+        res = (tmdb.get(f"/{media}/{tid}/watch/providers") or {}).get("results", {}).get(WATCH_COUNTRY)
+        if not res:
+            continue
+        entry = {"link": res.get("link")}
+        for src, dst in (("flatrate", "stream"), ("free", "free"), ("ads", "ads"), ("rent", "rent"), ("buy", "buy")):
+            provs = sorted(res.get(src) or [], key=lambda p: p.get("display_priority", 99))
+            if provs:
+                entry[dst] = [{"name": p["provider_name"], "logo": p.get("logo_path")} for p in provs]
+        if len(entry) > 1:
+            out[f"{media}:{tid}"] = entry
+    log(f"Where to watch ({WATCH_COUNTRY}): {len(out)} of {len(keys)} titles available")
+    return write_if_changed(WATCH_FILE, {"country": WATCH_COUNTRY, "titles": out})
+
+
 def update_news():
     old = []
     if os.path.exists(NEWS_FILE):
@@ -582,6 +606,8 @@ def main():
         log(f"credits.json: {len(credits)} credits ({'changed' if credits_changed else 'no change'}); "
             f"{tmdb.calls} TMDB requests")
 
+    if "--news-only" not in args:
+        credits_changed = update_watch(tmdb, credits) or credits_changed
     news_changed = update_news()
     update_meta(credits_changed, news_changed, extra)
     log("Done.")
