@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Liam Neeson Tracker</title>
+  <meta name="description" content="An unofficial fan site tracking Liam Neeson's film and TV career: credits, genres, roles, ratings, box office and screen time, as an interactive infographic.">
+  <meta name="theme-color" content="#0c0a08">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0a08'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='18' text-anchor='middle' fill='%23e6b866'%3ELN%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+  <script defer src="assets/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <p class="eyebrow">Unofficial fan site</p>
+      <h1>Liam Neeson <span>Tracker</span></h1>
+      <p class="tagline">A particular set of statistics: every film, series and role, tracked nightly.</p>
+      <p class="updated">Last updated <time id="last-updated">…</time></p>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section aria-labelledby="stats-h" class="stats-section">
+      <h2 id="stats-h" class="visually-hidden">Headline numbers</h2>
+      <div class="stats" id="stats" aria-live="polite"></div>
+    </section>
+
+    <div class="layout">
+      <aside class="filters" aria-labelledby="filters-h">
+        <button class="filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters-body">
+          <span id="filters-h">Filters</span> <span class="badge" id="filters-count" hidden></span>
+          <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18"><path d="M5 7l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <form class="filters-body" id="filters-body" onsubmit="return false">
+          <div class="field">
+            <label for="f-q">Search title or character</label>
+            <input type="search" id="f-q" placeholder="e.g. Taken, Qui-Gon" autocomplete="off">
+          </div>
+
+          <fieldset class="field">
+            <legend>Show</legend>
+            <div class="segmented" role="radiogroup" aria-label="Film or TV">
+              <label><input type="radio" name="media" value="all" checked><span>Both</span></label>
+              <label><input type="radio" name="media" value="movie"><span>Film</span></label>
+              <label><input type="radio" name="media" value="tv"><span>TV</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Release status</legend>
+            <div class="segmented" role="radiogroup" aria-label="Release status">
+              <label><input type="radio" name="status" value="all" checked><span>All</span></label>
+              <label><input type="radio" name="status" value="released"><span>Released</span></label>
+              <label><input type="radio" name="status" value="upcoming"><span>Upcoming</span></label>
+            </div>
+          </fieldset>
+
+          <div class="field range" id="f-year" data-label="Year" data-unit=""></div>
+          <div class="field range" id="f-rating" data-label="TMDB rating" data-unit=""></div>
+          <div class="field range" id="f-budget" data-label="Budget" data-unit="$M"></div>
+
+          <fieldset class="field">
+            <legend>Role type <span class="hint">(none selected = all)</span></legend>
+            <div class="chips" id="f-roles"></div>
+            <label class="switch">
+              <input type="checkbox" id="f-himself">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span>Include “Himself” appearances <span class="hint">(talk shows, documentaries, awards)</span></span>
+            </label>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Genre <span class="hint">(none selected = all)</span></legend>
+            <div class="chips" id="f-genres"></div>
+          </fieldset>
+
+          <div class="filter-actions">
+            <button type="button" class="btn" id="f-reset">Reset filters</button>
+            <button type="button" class="btn btn-ghost" id="f-share">Copy link to this view</button>
+          </div>
+          <p class="result-count" id="result-count" aria-live="polite"></p>
+          <button type="button" class="btn done-btn" id="f-done">Show results</button>
+        </form>
+      </aside>
+
+      <div class="content">
+        <section aria-labelledby="charts-h">
+          <h2 id="charts-h" class="section-title">The career in charts</h2>
+          <div class="charts">
+            <figure class="card chart-card wide">
+              <figcaption><h3>Credits per year</h3><p>Titles by year he first appeared, film vs TV</p></figcaption>
+              <div class="chart" id="c-years" role="img"></div>
+            </figure>
+            <figure class="card chart-card">
+              <figcaption><h3>Genre breakdown</h3><p>Number of titles in each genre (a title can have several)</p></figcaption>
+              <div class="chart" id="c-genres" role="img"></div>
+            </figure>
+            <figure class="card chart-card">
+              <figcaption><h3>Role types</h3><p>How each credit is classified</p></figcaption>
+              <div class="chart" id="c-roles" role="img"></div>
+            </figure>
+            <figure class="card chart-card wide">
+              <figcaption><h3>Rating over time</h3><p>Each dot is a title; bigger dots have more TMDB votes. Click a dot for details.</p></figcaption>
+              <div class="chart tall" id="c-ratings" role="img"></div>
+            </figure>
+            <figure class="card chart-card wide">
+              <figcaption><h3>Budget vs box office</h3><p>Films with both figures known (log scale). Above the dashed line = earned more than it cost.</p></figcaption>
+              <div class="chart tall" id="c-money" role="img"></div>
+            </figure>
+            <figure class="card chart-card wide">
+              <figcaption><h3>Screen time by year</h3><p id="c-screen-sub">Minutes on screen, from titles recorded so far</p></figcaption>
+              <div class="chart" id="c-screen" role="img"></div>
+            </figure>
+          </div>
+        </section>
+
+        <section aria-labelledby="top-h">
+          <h2 id="top-h" class="section-title">Top tens</h2>
+          <div class="tops" id="tops"></div>
+        </section>
+
+        <section aria-labelledby="list-h">
+          <div class="list-head">
+            <h2 id="list-h" class="section-title">Every credit</h2>
+            <label class="sort-select">Sort by
+              <select id="sort-select">
+                <option value="date:desc">Newest first</option>
+                <option value="date:asc">Oldest first</option>
+                <option value="title:asc">Title A–Z</option>
+                <option value="rating:desc">Highest rated</option>
+                <option value="revenue:desc">Highest grossing</option>
+                <option value="budget:desc">Biggest budget</option>
+                <option value="minutes:desc">Longest screen time</option>
+                <option value="episodes:desc">Most episodes</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table class="credits" id="credits">
+              <thead>
+                <tr>
+                  <th scope="col" data-sort="date">Year</th>
+                  <th scope="col" data-sort="title">Title</th>
+                  <th scope="col" data-sort="media" class="hide-sm">Type</th>
+                  <th scope="col" data-sort="role_type">Role</th>
+                  <th scope="col" data-sort="character" class="hide-md">Character / job</th>
+                  <th scope="col" data-sort="rating" class="num">Rating</th>
+                  <th scope="col" data-sort="revenue" class="num hide-sm">Box office</th>
+                  <th scope="col" data-sort="minutes" class="num hide-md">Screen time</th>
+                </tr>
+              </thead>
+              <tbody id="credits-body"></tbody>
+            </table>
+          </div>
+          <button class="btn more" id="show-more" hidden></button>
+        </section>
+
+        <section aria-labelledby="news-h">
+          <h2 id="news-h" class="section-title">In the news</h2>
+          <ol class="news" id="news"></ol>
+          <p class="fine">Latest headlines from Google News, refreshed nightly. Links go to the original publishers.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <a class="tmdb" href="https://www.themoviedb.org/" target="_blank" rel="noopener">
+        <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg"
+             onerror="this.onerror=null;this.src='assets/tmdb-logo.svg'" alt="TMDB logo" width="140" height="18">
+      </a>
+      <div>
+        <p>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+        <p><strong>Unofficial fan site, not affiliated with Liam Neeson or TMDB.</strong></p>
+        <p class="fine">Film and TV data from <a href="https://www.themoviedb.org/person/3896" target="_blank" rel="noopener">The Movie Database (TMDB)</a>. Headlines via Google News. Screen time is recorded by hand.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="wrap">This site needs JavaScript to show its charts.</p></noscript>
+</body>
+</html>
